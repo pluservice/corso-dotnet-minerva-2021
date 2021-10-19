@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using SampleWebApi.Services;
+using SampleWebApi.BusinessLayer.MapperProfiles;
+using SampleWebApi.BusinessLayer.Services;
+using SampleWebApi.DataAccessLayer;
 using SampleWebApi.Settings;
 
 namespace SampleWebApi
@@ -32,7 +35,8 @@ namespace SampleWebApi
             var settings = section.Get<ApplicationOptions>();
             services.Configure<ApplicationOptions>(section);
 
-            services.AddControllers();
+            services.AddControllers(); //.AddNewtonsoftJson();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "SampleWebApi", Version = "v1" });
@@ -49,6 +53,13 @@ namespace SampleWebApi
             //{
             //    services.AddScoped<IPeopleService, PeopleService>();
             //}
+
+            services.AddDbContext<DataContext>(options =>
+            {
+                options.UseSqlServer(connectionString);
+            });
+
+            services.AddAutoMapper(typeof(PersonMapperProfile).Assembly);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

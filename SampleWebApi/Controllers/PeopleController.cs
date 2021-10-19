@@ -1,12 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SampleWebApi.Models;
-using SampleWebApi.Services;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using SampleWebApi.BusinessLayer.Services;
+using SampleWebApi.Shared.Models;
+using System.Collections.Generic;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace SampleWebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces(MediaTypeNames.Application.Json)]
     public class PeopleController : ControllerBase
     {
         private readonly IPeopleService peopleService;
@@ -16,11 +20,75 @@ namespace SampleWebApi.Controllers
             this.peopleService = peopleService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Save(Person person)
+        [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<Person>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetPeopleList()
         {
-            await peopleService.SaveAsync(person);
-            return NoContent();
+            var people = await peopleService.GetListAsync();
+            return Ok(people);
         }
+
+        [HttpGet("{id:int}", Name = nameof(GetPersonById))]
+        [ProducesResponseType(typeof(Person), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetPersonById(int id)
+        {
+            var person = await peopleService.GetAsync(id);
+            if (person != null)
+            {
+                return Ok(person);
+            }
+
+            return NotFound();
+        }
+
+        //[HttpGet("{id:int}/addresses")]
+        //public IActionResult GetAddressesByPersonId(int id)
+        //{
+        //    return NoContent();
+        //}
+
+        //[HttpGet("{personId:int}/addresses/{addressId:int}")]
+        //public IActionResult GetAddressByPersonId(int personId, int addressId)
+        //{
+        //    return NoContent();
+        //}
+
+        [HttpPost]
+        [ProducesResponseType(typeof(Person), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Insert(SavePersonRequest person)
+        {
+            var result = await peopleService.SaveAsync(person);
+
+            //var url = Url.Action(nameof(GetPersonById), new { id = 976 });
+            //return Created(url, person);
+
+            return Ok(result);
+        }
+
+        //[HttpPut("{id:int}")]
+        //public async Task<IActionResult> Update(int id, Person person)
+        //{
+        //    await peopleService.SaveAsync(person);
+        //    return NoContent();
+        //}
+
+        //[HttpPost("{id:int}/addresses")]
+        //public IActionResult SaveAddress(int id)
+        //{
+        //    return NoContent();
+        //}
+
+        //[HttpPut("{personId:int}/addresses/{addressId:int}")]
+        //public IActionResult UpdateAddressByPersonId(int personId, int addressId)
+        //{
+        //    return NoContent();
+        //}
+
+        //[HttpDelete("{id:int}")]
+        //public IActionResult Delete(int id)
+        //{
+        //    return NoContent();
+        //}
     }
 }

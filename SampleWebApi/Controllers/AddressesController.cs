@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SampleWebApi.Services;
+using SampleWebApi.BusinessLayer.Services;
 
 namespace SampleWebApi.Controllers
 {
@@ -13,5 +13,11 @@ namespace SampleWebApi.Controllers
         {
             this.peopleService = peopleService;
         }
+
+        //[HttpGet("getbypersonid/{id:int}")]
+        //public IActionResult GetAddressesByPersonId(int id)
+        //{
+        //    return NoContent();
+        //}
     }
 }
