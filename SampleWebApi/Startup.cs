@@ -1,16 +1,21 @@
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using SampleWebApi.BusinessLayer.MapperProfiles;
 using SampleWebApi.BusinessLayer.Services;
+using SampleWebApi.BusinessLayer.Settings;
 using SampleWebApi.BusinessLayer.Validations;
 using SampleWebApi.DataAccessLayer;
-using SampleWebApi.Settings;
+using System;
+using System.Text;
 
 namespace SampleWebApi
 {
@@ -33,22 +38,70 @@ namespace SampleWebApi
             //var setting1 = Configuration.GetValue<string>("ApplicationOptions:Setting1");
             //var setting2 = Configuration.GetValue<int>("ApplicationOptions:Setting2");
 
-            var section = Configuration.GetSection(nameof(ApplicationOptions));
-            var settings = section.Get<ApplicationOptions>();
-            services.Configure<ApplicationOptions>(section);
+            Configure<ApplicationOptions>(nameof(ApplicationOptions));
+            var jwtSettings = Configure<JwtSettings>(nameof(JwtSettings));
 
             services.AddControllers()
                 .AddFluentValidation(options
                 => options.RegisterValidatorsFromAssemblyContaining<SavePersonRequestValidator>())
                 ; //.AddNewtonsoftJson();
 
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "SampleWebApi", Version = "v1" });
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "SampleWebApi", Version = "v1" });
+
+                options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Insert JWT token with the \"Bearer \" prefix",
+                    Name = HeaderNames.Authorization,
+                    Type = SecuritySchemeType.ApiKey
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = JwtBearerDefaults.AuthenticationScheme
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
             });
 
             //services.AddSingleton<IPeopleService, PeopleService>();
             services.AddScoped<IPeopleService, PeopleService>();
+            services.AddScoped<IIdentityService, IdentityService>();
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new()
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtSettings.Audience,
+                    ValidateLifetime = true,
+                    RequireExpirationTime = true,
+                    ClockSkew = TimeSpan.FromMinutes(2),
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecurityKey))
+                };
+            });
+
+            services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = options.DefaultPolicy;
+            });
 
             //if (Environment.IsDevelopment())
             //{
@@ -65,6 +118,15 @@ namespace SampleWebApi
             });
 
             services.AddAutoMapper(typeof(PersonMapperProfile).Assembly);
+
+            T Configure<T>(string sectionName) where T : class
+            {
+                var section = Configuration.GetSection(sectionName);
+                var settings = section.Get<T>();
+                services.Configure<T>(section);
+
+                return settings;
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -82,6 +144,7 @@ namespace SampleWebApi
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

@@ -22,6 +22,7 @@ namespace SampleWebApi.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Person>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetPeopleList()
         {
             var people = await peopleService.GetListAsync();
@@ -65,8 +66,6 @@ namespace SampleWebApi.Controllers
         [ProducesResponseType(typeof(Person), StatusCodes.Status200OK)]
         public async Task<IActionResult> Save(SavePersonRequest person)
         {
-            return NoContent();
-
             var result = await peopleService.SaveAsync(person);
 
             //var url = Url.Action(nameof(GetPersonById), new { id = 976 });

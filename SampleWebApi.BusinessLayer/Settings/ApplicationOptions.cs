@@ -1,4 +1,4 @@
-﻿namespace SampleWebApi.Settings
+﻿namespace SampleWebApi.BusinessLayer.Settings
 {
     public class ApplicationOptions
     {
