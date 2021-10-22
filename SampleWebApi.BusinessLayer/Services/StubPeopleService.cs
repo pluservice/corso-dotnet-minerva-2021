@@ -30,5 +30,10 @@ namespace SampleWebApi.BusinessLayer.Services
         {
             throw new NotImplementedException();
         }
+
+        public Task DeleteAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

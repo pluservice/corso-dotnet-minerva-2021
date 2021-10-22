@@ -54,16 +54,33 @@ namespace SampleWebApi.Controllers
         //    return NoContent();
         //}
 
+        //[HttpPost]
+        //[ProducesResponseType(StatusCodes.Status204NoContent)]
+        //public IActionResult Save(Person person)
+        //{
+        //    return NoContent();
+        //}
+
         [HttpPost]
         [ProducesResponseType(typeof(Person), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Insert(SavePersonRequest person)
+        public async Task<IActionResult> Save(SavePersonRequest person)
         {
+            return NoContent();
+
             var result = await peopleService.SaveAsync(person);
 
             //var url = Url.Action(nameof(GetPersonById), new { id = 976 });
             //return Created(url, person);
 
             return Ok(result);
+        }
+
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await peopleService.DeleteAsync(id);
+            return NoContent();
         }
 
         //[HttpPut("{id:int}")]
@@ -81,12 +98,6 @@ namespace SampleWebApi.Controllers
 
         //[HttpPut("{personId:int}/addresses/{addressId:int}")]
         //public IActionResult UpdateAddressByPersonId(int personId, int addressId)
-        //{
-        //    return NoContent();
-        //}
-
-        //[HttpDelete("{id:int}")]
-        //public IActionResult Delete(int id)
         //{
         //    return NoContent();
         //}

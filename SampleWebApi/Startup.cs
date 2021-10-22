@@ -1,3 +1,4 @@
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using SampleWebApi.BusinessLayer.MapperProfiles;
 using SampleWebApi.BusinessLayer.Services;
+using SampleWebApi.BusinessLayer.Validations;
 using SampleWebApi.DataAccessLayer;
 using SampleWebApi.Settings;
 
@@ -35,7 +37,10 @@ namespace SampleWebApi
             var settings = section.Get<ApplicationOptions>();
             services.Configure<ApplicationOptions>(section);
 
-            services.AddControllers(); //.AddNewtonsoftJson();
+            services.AddControllers()
+                .AddFluentValidation(options
+                => options.RegisterValidatorsFromAssemblyContaining<SavePersonRequestValidator>())
+                ; //.AddNewtonsoftJson();
 
             services.AddSwaggerGen(c =>
             {

@@ -11,5 +11,7 @@ namespace SampleWebApi.BusinessLayer.Services
         Task<Person> GetAsync(int id);
 
         Task<Person> SaveAsync(SavePersonRequest person);
+
+        Task DeleteAsync(int id);
     }
 }

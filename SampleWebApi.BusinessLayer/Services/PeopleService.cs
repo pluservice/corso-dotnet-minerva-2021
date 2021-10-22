@@ -48,13 +48,35 @@ namespace SampleWebApi.BusinessLayer.Services
 
         public async Task<Person> SaveAsync(SavePersonRequest person)
         {
-            var dbPerson = mapper.Map<DataAccessLayer.Entities.Person>(person);
+            var dbPerson = person.Id > 0 ? await dataContext.FindAsync<DataAccessLayer.Entities.Person>(person.Id)
+                : null;
 
-            dataContext.People.Add(dbPerson);
+            if (dbPerson == null)
+            {
+                dbPerson = mapper.Map<DataAccessLayer.Entities.Person>(person);
+                dbPerson.CreatedAt = DateTime.UtcNow;
+
+                dataContext.People.Add(dbPerson);
+            }
+            else
+            {
+                mapper.Map(person, dbPerson);
+            }
+
             await dataContext.SaveChangesAsync();
 
             var result = mapper.Map<Person>(dbPerson);
             return result;
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var dbPerson = await dataContext.FindAsync<DataAccessLayer.Entities.Person>(id);
+            if (dbPerson != null)
+            {
+                dataContext.People.Remove(dbPerson);
+                await dataContext.SaveChangesAsync();
+            }
         }
 
         public void Dispose()
@@ -65,7 +87,5 @@ namespace SampleWebApi.BusinessLayer.Services
         {
             await Task.Delay(1000);
         }
-
-
     }
 }

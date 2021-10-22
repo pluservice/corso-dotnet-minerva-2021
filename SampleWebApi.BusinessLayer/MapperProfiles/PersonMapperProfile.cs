@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using SampleWebApi.Shared.Models;
-using System;
 
 namespace SampleWebApi.BusinessLayer.MapperProfiles
 {
@@ -14,8 +13,7 @@ namespace SampleWebApi.BusinessLayer.MapperProfiles
             //.ForMember(dst => dst.City,
             //    opt => opt.MapFrom(source => source.Address.City));
 
-            CreateMap<SavePersonRequest, DataAccessLayer.Entities.Person>()
-                .ForMember(dst => dst.CreatedAt, opt => opt.MapFrom(source => DateTime.UtcNow));
+            CreateMap<SavePersonRequest, DataAccessLayer.Entities.Person>();
         }
     }
 }
