@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SampleWebApi.BusinessLayer.Services;
 using SampleWebApi.Shared.Models;
 using System.Collections.Generic;
@@ -8,16 +10,19 @@ using System.Threading.Tasks;
 
 namespace SampleWebApi.Controllers
 {
+    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     [Produces(MediaTypeNames.Application.Json)]
     public class PeopleController : ControllerBase
     {
         private readonly IPeopleService peopleService;
+        private readonly ILogger<PeopleController> logger;
 
-        public PeopleController(IPeopleService peopleService)
+        public PeopleController(IPeopleService peopleService, ILogger<PeopleController> logger)
         {
             this.peopleService = peopleService;
+            this.logger = logger;
         }
 
         [HttpGet]
@@ -25,7 +30,12 @@ namespace SampleWebApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetPeopleList()
         {
+            logger.LogDebug("Inizio recupero lista persone...");
+
             var people = await peopleService.GetListAsync();
+
+            logger.LogInformation("Persone recuperate");
+
             return Ok(people);
         }
 

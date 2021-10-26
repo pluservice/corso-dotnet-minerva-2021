@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SampleWebApi.DataAccessLayer;
 using SampleWebApi.Shared.Models;
 using System;
@@ -14,20 +15,26 @@ namespace SampleWebApi.BusinessLayer.Services
     {
         private readonly DataContext dataContext;
         private readonly IMapper mapper;
+        private readonly ILogger<PeopleService> logger;
 
-        public PeopleService(DataContext dataContext, IMapper mapper)
+        public PeopleService(DataContext dataContext, IMapper mapper, ILogger<PeopleService> logger)
         {
             this.dataContext = dataContext;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         public async Task<IEnumerable<Person>> GetListAsync()
         {
+            logger.LogInformation("Accesso al database in corso...");
+
             var people = await dataContext.People
                 .OrderBy(p => p.FirstName).ThenBy(p => p.LastName)
                 //.Select(p => p.ToDto())
                 .ProjectTo<Person>(mapper.ConfigurationProvider)
                 .ToListAsync();
+
+            logger.LogInformation("Persone recuperate: {PeopleCount}", people.Count);
 
             return people;
         }

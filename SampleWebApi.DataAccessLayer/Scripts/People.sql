@@ -5,6 +5,7 @@
 	[City] [nvarchar](max) NULL,
 	[CreatedAt] [datetime] NULL,
 	[BirthDate] [datetime] NULL,
+	[IsActive] BIT NOT NULL DEFAULT 1,
  CONSTRAINT [PK_People] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC

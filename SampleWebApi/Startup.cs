@@ -16,6 +16,9 @@ using SampleWebApi.BusinessLayer.Services;
 using SampleWebApi.BusinessLayer.Settings;
 using SampleWebApi.BusinessLayer.Validations;
 using SampleWebApi.DataAccessLayer;
+using SampleWebApi.Logging;
+using SampleWebApi.Middlewares;
+using Serilog;
 using System;
 using System.Security.Claims;
 using System.Text;
@@ -166,6 +169,10 @@ namespace SampleWebApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            //app.UseMiddleware<CustomAuthorizationResponseMiddleware>();
+            //app.UseMiddleware<IpFilteringMiddleware>();
+            app.UseMiddleware<EnableRequestRewindMiddleware>();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -177,6 +184,11 @@ namespace SampleWebApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseSerilogRequestLogging(options =>
+            {
+                options.EnrichDiagnosticContext = LogHelper.EnrichFromRequest;
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
