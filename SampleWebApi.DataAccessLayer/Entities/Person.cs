@@ -25,5 +25,7 @@ namespace SampleWebApi.DataAccessLayer.Entities
         public DateTime? BirthDate { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

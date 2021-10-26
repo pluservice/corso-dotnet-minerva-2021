@@ -28,7 +28,10 @@ namespace SampleWebApi.BusinessLayer.Services
                     new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
                     new Claim(ClaimTypes.Name, request.Username),
                     new Claim(ClaimTypes.Role, "Administrator"),
-                    new Claim(ClaimTypes.Role, "Developer")
+                    new Claim(ClaimTypes.Role, "Developer"),
+                    new Claim(ClaimTypes.Country, "IT"),
+                    new Claim("ip_address", "192.168.1.149"),
+                    new Claim(ClaimTypes.DateOfBirth, "1968-01-21")
                 };
 
                 var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecurityKey));

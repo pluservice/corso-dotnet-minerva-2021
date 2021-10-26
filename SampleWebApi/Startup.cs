@@ -1,5 +1,6 @@
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -9,12 +10,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
+using SampleWebApi.Authentication;
 using SampleWebApi.BusinessLayer.MapperProfiles;
 using SampleWebApi.BusinessLayer.Services;
 using SampleWebApi.BusinessLayer.Settings;
 using SampleWebApi.BusinessLayer.Validations;
 using SampleWebApi.DataAccessLayer;
 using System;
+using System.Security.Claims;
 using System.Text;
 
 namespace SampleWebApi
@@ -98,9 +101,40 @@ namespace SampleWebApi
                 };
             });
 
+            services.AddScoped<IAuthorizationHandler, MinimumAgeHandler>();
+            services.AddScoped<IAuthorizationHandler, UserActiveHandler>();
+
             services.AddAuthorization(options =>
             {
-                options.FallbackPolicy = options.DefaultPolicy;
+                var policyBuilder = new AuthorizationPolicyBuilder();
+                policyBuilder.RequireAuthenticatedUser();
+                policyBuilder.Requirements.Add(new UserActiveRequirement());
+
+                //.RequireClaim(ClaimTypes.Country, "US");
+                //.RequireClaim("ip_address", "192.168.1.149");
+
+                options.FallbackPolicy = options.DefaultPolicy = policyBuilder.Build();
+
+                //options.AddPolicy("OnlyUSContry", policyBuilder.Build());
+                options.AddPolicy("OnlyUSContry", policy =>
+                {
+                    policy.RequireAuthenticatedUser().RequireClaim(ClaimTypes.Country, "US");
+                });
+
+                options.AddPolicy("AtLeast18", policy =>
+                {
+                    policy.Requirements.Add(new MinimumAgeRequirement(18));
+                });
+
+                options.AddPolicy("AtLeast21", policy =>
+                {
+                    policy.Requirements.Add(new MinimumAgeRequirement(21));
+                });
+
+                options.AddPolicy("RequireActiveUser", policy =>
+                {
+                    policy.Requirements.Add(new UserActiveRequirement());
+                });
             });
 
             //if (Environment.IsDevelopment())

@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SampleWebApi.Authentication\SampleWebApi.Authentication.csproj" />
     <ProjectReference Include="..\SampleWebApi.BusinessLayer\SampleWebApi.BusinessLayer.csproj" />
   </ItemGroup>
 

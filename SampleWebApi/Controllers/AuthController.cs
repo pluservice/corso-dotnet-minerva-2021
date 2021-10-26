@@ -40,5 +40,31 @@ namespace SampleWebApi.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             return NoContent();
         }
+
+        [HttpGet("policyme")]
+        [Authorize(Policy = "OnlyUSContry")]
+        public IActionResult GetUser_2()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return NoContent();
+        }
+
+        [HttpGet("18me")]
+        [Authorize(Policy = "AtLeast18")]
+        [Authorize(Policy = "RequireActiveUser")]
+        public IActionResult GetUser_AtLeast18()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return NoContent();
+        }
+
+        [HttpGet("activeme")]
+        [Authorize(Policy = "RequireActiveUser")]
+        public IActionResult GetActiveUser()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return NoContent();
+        }
     }
 }
