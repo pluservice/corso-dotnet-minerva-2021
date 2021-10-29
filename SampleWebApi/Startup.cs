@@ -1,3 +1,7 @@
+using System;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Text;
 using FluentValidation.AspNetCore;
 using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,19 +15,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
+using Quartz;
 using SampleWebApi.Authentication;
 using SampleWebApi.BusinessLayer.MapperProfiles;
 using SampleWebApi.BusinessLayer.Services;
 using SampleWebApi.BusinessLayer.Settings;
 using SampleWebApi.BusinessLayer.Validations;
 using SampleWebApi.DataAccessLayer;
+using SampleWebApi.Extensions;
 using SampleWebApi.Logging;
 using SampleWebApi.Middlewares;
+using SampleWebApi.Workers;
 using Serilog;
-using System;
-using System.Net.Http;
-using System.Security.Claims;
-using System.Text;
 
 namespace SampleWebApi
 {
@@ -179,6 +182,20 @@ namespace SampleWebApi
                         .AllowAnyMethod()
                         .AllowAnyHeader();
                 });
+            });
+
+            //services.AddHostedService<SampleWorkerService>();
+
+            services.AddQuartz(options =>
+            {
+                options.UseMicrosoftDependencyInjectionJobFactory();
+
+                options.AddScheduledJob<SampleJob>("0/10 * * * * ?");
+            });
+
+            services.AddQuartzHostedService(options =>
+            {
+                options.WaitForJobsToComplete = true;
             });
 
             T Configure<T>(string sectionName) where T : class
