@@ -1,12 +1,13 @@
 using FluentValidation.AspNetCore;
+using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
@@ -20,6 +21,7 @@ using SampleWebApi.Logging;
 using SampleWebApi.Middlewares;
 using Serilog;
 using System;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 
@@ -156,6 +158,29 @@ namespace SampleWebApi
 
             services.AddAutoMapper(typeof(PersonMapperProfile).Assembly);
 
+            services.AddProblemDetails(options =>
+            {
+                // This will map NotImplementedException to the 501 Not Implemented status code.
+                options.Map<NotImplementedException>(ex => new StatusCodeProblemDetails(StatusCodes.Status501NotImplemented));
+
+                // This will map HttpRequestException to the 503 Service Unavailable status code.
+                options.Map<HttpRequestException>(ex => new StatusCodeProblemDetails(StatusCodes.Status503ServiceUnavailable));
+
+                // Because exceptions are handled polymorphically, this will act as a "catch all" mapping, which is why it's added last.
+                // If an exception other than NotImplementedException and HttpRequestException is thrown, this will handle it.
+                options.Map<Exception>(ex => new StatusCodeProblemDetails(StatusCodes.Status500InternalServerError));
+            });
+
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+            });
+
             T Configure<T>(string sectionName) where T : class
             {
                 var section = Configuration.GetSection(sectionName);
@@ -173,10 +198,12 @@ namespace SampleWebApi
             //app.UseMiddleware<IpFilteringMiddleware>();
             app.UseMiddleware<EnableRequestRewindMiddleware>();
 
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            app.UseProblemDetails();
+
+            //if (env.IsDevelopment())
+            //{
+            //    app.UseDeveloperExceptionPage();
+            //}
 
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SampleWebApi v1"));
@@ -184,6 +211,8 @@ namespace SampleWebApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseSerilogRequestLogging(options =>
             {
