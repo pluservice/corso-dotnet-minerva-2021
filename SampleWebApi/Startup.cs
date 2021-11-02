@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
@@ -86,7 +87,9 @@ namespace SampleWebApi
             });
 
             //services.AddSingleton<IPeopleService, PeopleService>();
+            //services.AddScoped<IPeopleService, DapperPeopleService>();
             services.AddScoped<IPeopleService, PeopleService>();
+
             services.AddScoped<IIdentityService, IdentityService>();
 
             services.AddAuthentication(options =>
@@ -156,7 +159,16 @@ namespace SampleWebApi
 
             services.AddDbContext<DataContext>(options =>
             {
-                options.UseSqlServer(connectionString);
+                options.UseSqlServer(connectionString, providerOptions =>
+                {
+                    providerOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(1), null);
+                });
+            });
+
+            services.AddScoped<ISqlContext>(services =>
+            {
+                var logger = services.GetService<ILogger<SqlContext>>();
+                return new SqlContext(connectionString, logger);
             });
 
             services.AddAutoMapper(typeof(PersonMapperProfile).Assembly);
