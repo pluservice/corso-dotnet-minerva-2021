@@ -3,7 +3,7 @@
 	[FirstName] [nvarchar](max) NULL,
 	[LastName] [nvarchar](max) NULL,
 	[City] [nvarchar](max) NULL,
-	[CreatedAt] [datetime] NOT NULL,
+	[CreatedAt] [datetime] NOT NULL DEFAULT GETUTCDATE(),
 	[BirthDate] [datetime] NULL,
 	[IsActive] BIT NOT NULL DEFAULT 1,
  CONSTRAINT [PK_People] PRIMARY KEY CLUSTERED 

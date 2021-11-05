@@ -61,7 +61,7 @@ namespace SampleWebApi.BusinessLayer.Services
             if (dbPerson == null)
             {
                 dbPerson = mapper.Map<DataAccessLayer.Entities.Person>(person);
-                dbPerson.CreatedAt = DateTime.Now;
+                dbPerson.CreatedAt = DateTime.UtcNow;
 
                 dataContext.People.Add(dbPerson);
             }

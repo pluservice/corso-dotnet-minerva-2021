@@ -19,6 +19,7 @@ using Microsoft.OpenApi.Models;
 using Quartz;
 using SampleWebApi.Authentication;
 using SampleWebApi.BusinessLayer.MapperProfiles;
+using SampleWebApi.BusinessLayer.Providers;
 using SampleWebApi.BusinessLayer.Services;
 using SampleWebApi.BusinessLayer.Settings;
 using SampleWebApi.BusinessLayer.Validations;
@@ -28,6 +29,7 @@ using SampleWebApi.Logging;
 using SampleWebApi.Middlewares;
 using SampleWebApi.Workers;
 using Serilog;
+using TinyHelpers.Json.Serialization;
 
 namespace SampleWebApi
 {
@@ -54,9 +56,13 @@ namespace SampleWebApi
             var jwtSettings = Configure<JwtSettings>(nameof(JwtSettings));
 
             services.AddControllers()
-                .AddFluentValidation(options
-                => options.RegisterValidatorsFromAssemblyContaining<SavePersonRequestValidator>())
-                ; //.AddNewtonsoftJson();
+                .AddFluentValidation(options => options.RegisterValidatorsFromAssemblyContaining<SavePersonRequestValidator>())
+                //.AddNewtonsoftJson(options => options.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc)
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+                })
+                ;
 
             services.AddSwaggerGen(options =>
             {
@@ -209,6 +215,18 @@ namespace SampleWebApi
             {
                 options.WaitForJobsToComplete = true;
             });
+
+            var useAzureStorage = Configuration.GetValue<bool>("ApplicationOptions:UseAzureStorage");
+            if (useAzureStorage)
+            {
+                services.AddScoped<IStorageProvider, AzureStorageProvider>();
+            }
+            else
+            {
+                services.AddScoped<IStorageProvider, FileSystemStorageProvider>();
+            }
+
+            services.AddScoped<IImageService, ImageService>();
 
             T Configure<T>(string sectionName) where T : class
             {
